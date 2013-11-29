@@ -28,9 +28,10 @@ public class SamplingAgent {
     
     private static final Logger logger = Logger.getLogger(SamplingAgent.class.getName());
     
-    public static void premain(String args, Instrumentation instrumentation) {
+    public static void premain(String args, Instrumentation instrumentation) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         int samplingInterval = 100;
         int outputInterval = 20000;
+        String outputWriterClassName = LoggerOutputWriter.class.getName();
         
         for (String keyValueStr : args.split(",")) {
             String[] keyValue = keyValueStr.split("=");
@@ -40,6 +41,9 @@ public class SamplingAgent {
                     break;
                 case "outputInterval":
                     outputInterval = Integer.parseInt(keyValue[1]);
+                    break;
+                case "outputWriter":
+                    outputWriterClassName = keyValue[1];
                     break;
             }
         }
@@ -71,10 +75,15 @@ public class SamplingAgent {
         
         Thread samplingThread = new Thread(samplingTask);
         samplingThread.setDaemon(true);
+        samplingThread.setName("samplingagent-sampling-thread");
         samplingThread.start();
         
-        Thread outputThread = new Thread(new LoggerOutputTask(outputInterval, samplingTask));
+        OutputWriter outputWriter = (OutputWriter) Class.forName(outputWriterClassName).newInstance();
+        
+        OutputTask outputTask = new OutputTask(outputInterval, samplingTask, outputWriter);
+        Thread outputThread = new Thread(outputTask);
         outputThread.setDaemon(true);
+        samplingThread.setName("samplingagent-output-thread");
         outputThread.start();
     }
 }

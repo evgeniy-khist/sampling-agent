@@ -10,8 +10,13 @@
 
     <name>sampling-agent</name>
 
-    <!--<dependencies>
-    </dependencies>-->
+    <dependencies>
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>0.90.7</version>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>

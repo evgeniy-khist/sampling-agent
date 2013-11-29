@@ -23,31 +23,45 @@ import java.util.logging.Logger;
  *
  * @author Evgeniy Khist
  */
-public class LoggerOutputTask implements Runnable {
+public class OutputTask implements Runnable {
 
-    private static final Logger logger = Logger.getLogger(LoggerOutputTask.class.getName());
+    private static final Logger logger = Logger.getLogger(ElasticSearchOutputWriter.class.getName());
     
     private final int interval;
-
     private final SamplingTask samplingTask;
+    private final OutputWriter outputWriter;
 
-    public LoggerOutputTask(int interval, SamplingTask samplingTask) {
+    public OutputTask(int interval, SamplingTask samplingTask, OutputWriter outputWriter) {
         this.interval = interval;
         this.samplingTask = samplingTask;
+        this.outputWriter = outputWriter;
     }
-    
+
     @Override
     public void run() {
         while (true) {
             sleep();
             
             for (Map.Entry<String, Long> entry : samplingTask.getSampling().entrySet()) {
-                String methodName = entry.getKey();
-                Long totalExecutionTime = entry.getValue();
-                
-                logger.log(Level.INFO, String.format("%s=%s", methodName, totalExecutionTime));
+                try {
+                    outputWriter.writeExecutionTime(entry.getKey(), entry.getValue());
+                } catch(Exception e) {
+                    logger.log(Level.WARNING, "Ignoring exception invoking writeExecutionTime");
+                }
             }
         }
+    }
+
+    public int getInterval() {
+        return interval;
+    }
+
+    public SamplingTask getSamplingTask() {
+        return samplingTask;
+    }
+
+    public OutputWriter getOutputWriter() {
+        return outputWriter;
     }
 
     private void sleep() {
