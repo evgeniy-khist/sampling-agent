@@ -16,9 +16,9 @@
 package org.samplingagent;
 
 import java.lang.instrument.Instrumentation;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import static java.util.Arrays.asList;
 
 /**
  *
@@ -26,36 +26,55 @@ import java.util.logging.Logger;
  */
 public class SamplingAgent {
     
-    private static Logger logger = Logger.getLogger(SamplingAgent.class.getName());
+    private static final Logger logger = Logger.getLogger(SamplingAgent.class.getName());
     
     public static void premain(String args, Instrumentation instrumentation) {
-        final int interval = 100;
-        Thread samplingThread = new Thread(new Runnable() {
-
-            private ConcurrentMap<String, Long> statistics = new ConcurrentHashMap<>();
-            
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(interval);
-                    } catch(InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                    for (StackTraceElement[] stackTrace : Thread.getAllStackTraces().values()) {
-                        if (stackTrace.length == 0) {
-                            continue;
-                        }
-                        for (StackTraceElement stackTraceElement : stackTrace) {
-                            String methodLongName = stackTraceElement.getClassName() + "#" + stackTraceElement.getMethodName();
-                            Long executionTime = statistics.get(methodLongName);
-                            statistics.put(methodLongName, executionTime != null ? executionTime += interval : interval); //TODO currentSample - lastSample instead of interval
-                        }
-                    }
-                }
+        int samplingInterval = 100;
+        int outputInterval = 20000;
+        
+        for (String keyValueStr : args.split(",")) {
+            String[] keyValue = keyValueStr.split("=");
+            switch (keyValue[0]) {
+                case "samplingInterval":
+                    samplingInterval = Integer.parseInt(keyValue[1]);
+                    break;
+                case "outputInterval":
+                    outputInterval = Integer.parseInt(keyValue[1]);
+                    break;
             }
-        });
+        }
+        
+        logger.log(Level.INFO, 
+                String.format("SamplingAgent started with samplingInterval=%s", samplingInterval));
+        
+        String includePackages = System.getProperty("org.samplingagent.includePackages");
+        String excludePackages = System.getProperty("org.samplingagent.excludePackages");
+        
+        if (includePackages != null && excludePackages != null) {
+            throw new RuntimeException("Both includePackages and excludePackages can't be specified at the same time");
+        }
+        
+        ClassSpecification classSpecification;
+        if (includePackages != null) {
+            logger.log(Level.INFO, 
+                String.format("Only classes from packages %s will be sampled", includePackages));
+            classSpecification = PackageNameClassSpecification.include(asList(includePackages.split(",")));
+        } else if (excludePackages != null) {
+            logger.log(Level.INFO, 
+                String.format("Classes from packages %s will not be sampled", excludePackages));
+            classSpecification = PackageNameClassSpecification.exclude(asList(excludePackages.split(",")));
+        } else {
+            classSpecification = new NoopClassSpecification();
+        }
+        
+        SamplingTask samplingTask = new SamplingTask(samplingInterval, classSpecification);
+        
+        Thread samplingThread = new Thread(samplingTask);
         samplingThread.setDaemon(true);
         samplingThread.start();
+        
+        Thread outputThread = new Thread(new LoggerOutputTask(outputInterval, samplingTask));
+        outputThread.setDaemon(true);
+        outputThread.start();
     }
 }
