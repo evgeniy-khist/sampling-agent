@@ -12,6 +12,6 @@ JAVA_OPTS="$JAVA_OPTS \
 -Dorg.samplingagent.nodeName=nodeName"
 ```
 
-`org.samplingagent.includePackages` empty by default
-`org.samplingagent.excludePackages` empty by default
-`org.samplingagent.nodeName=nodeName` empty by default
+* `org.samplingagent.includePackages` empty by default
+* `org.samplingagent.excludePackages` empty by default
+* `org.samplingagent.nodeName=nodeName` empty by default
