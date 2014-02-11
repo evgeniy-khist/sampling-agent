@@ -1,5 +1,7 @@
 sampling-agent
 ==============
+**sampling-agent** is started by adding `javaagent` option to the command-line. Configuration can be done with javaagent aptions and system properties.
+
 ```
 JAVA_OPTS="$JAVA_OPTS \
 -javaagent:sampling-agent.jar=samplingInterval=100,outputInterval=20000,outputWriter=org.samplingagent.ElasticSearchOutputWriter \
