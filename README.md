@@ -20,6 +20,10 @@ JAVA_OPTS="$JAVA_OPTS \
 
 `org.samplingagent.includePackages` and `org.samplingagent.excludePackages` shouldn't be used at the same time.
 
-`org.samplingagent.elasticsearch*` properties are used for configuring *ElasticSearchOutputWriter*.
+[LoggerOutputWriter](https://github.com/evgeniy-khist/sampling-agent/blob/master/src/main/java/org/samplingagent/LoggerOutputWriter.java) logs sampling data with *INFO* level using Java Util Logging. 
+
+[ElasticSearchOutputWriter](https://github.com/evgeniy-khist/sampling-agent/blob/master/src/main/java/org/samplingagent/ElasticSearchOutputWriter.java) sends sampling data to Elasticsearch.
+
+`org.samplingagent.elasticsearchHost`, `org.samplingagent.elasticsearchPort`, `org.samplingagent.elasticsearchClusterName`, `org.samplingagent.elasticsearchIndex` properties are used for configuring *ElasticSearchOutputWriter*.
 
 If value of `org.samplingagent.elasticsearchIndex` contains date placeholder like `%{yyyy.MM.dd}` it will be replaced with current date and time string representation based on specified format.
