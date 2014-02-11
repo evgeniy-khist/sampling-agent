@@ -12,6 +12,11 @@ JAVA_OPTS="$JAVA_OPTS \
 -Dorg.samplingagent.nodeName=nodeName"
 ```
 
+`samplingInterval`, `outputInterval` and `outputWriter` are mandatory options.
+
+`samplingInterval` and `outputInterval` specify time in milliseconds. 
+
+
 * `org.samplingagent.includePackages` empty by default
 * `org.samplingagent.excludePackages` empty by default
 * `org.samplingagent.nodeName=nodeName` empty by default
